@@ -64,10 +64,14 @@ function App() {
       transferExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
         if (status.isInBlock) {
             console.log(`Completed at block hash #${status.asInBlock.toString()}`);
+            alert(`Sent ${val} Reefs to ${address}`);
+            setAddress("");
+            setVal(0);
         } else {
             console.log(`Current status: ${status.type}`);
         }
     }).catch((error) => {
+      setError(error);
         console.log(':( transaction failed', error);
     });
   }
