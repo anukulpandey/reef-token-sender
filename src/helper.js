@@ -9,3 +9,17 @@ const transferExtrinsic = api.tx.balances.transfer('5CVL4WVCci97ngm1JCokmTwznwWM
     }).catch((error) => {
         console.log(':( transaction failed', error);
     });
+
+    const txs = [];
+      let i=0;
+      console.log(`Sending ${val} Reefs to ${address}`);
+      for(i=0;i<18*val;i++){
+        txs.push(api.tx.balances.transfer(address, 100000000000000))
+      }
+      api.tx.utility
+  .batch(txs)
+  .signAndSend(account.address,{ signer: injector.signer }, ({ status }) => {
+    if (status.isInBlock) {
+      console.log(`included in ${status.asInBlock}`);
+    }
+});
