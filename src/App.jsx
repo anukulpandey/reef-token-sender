@@ -8,16 +8,19 @@ import Alert from 'react-bootstrap/Alert';
 import Container from 'react-bootstrap/Container';
 import Button from 'react-bootstrap/Button';
 import Navbar from 'react-bootstrap/Navbar';
+// import Uik from "@reef-defi/ui-kit";
 
 
 function App() {
 
   const [account, setAccount] = useState("");
-  const [val, setVal] = useState(0);
-  const [address, setAddress] = useState(0);
+  const [val, setVal] = useState();
+  const [address, setAddress] = useState();
   const [api, setApi] = useState();
   const [error,setError] = useState("");
+  const [allAcc,setAllAcc] = useState([]);
   const [wallConnected,setWalletConnection] = useState(false);
+  const [idx,setIdx] = useState(0);
 
   const SINGLE_REEF = BigNumber.from("1000000000000000000");
   
@@ -43,13 +46,14 @@ function App() {
     const extensions = await web3Enable('reef');
       if (extensions.length === 0) {
         console.log("No extension detected");
+        setError("Please install Reef extensions");
         setWalletConnection(false);
         return;
       }
       setWalletConnection(true);
       const allAccounts = await web3Accounts();
-      setAccount(allAccounts[0]);
-
+      setAccount(allAccounts[idx]);
+      setAllAcc(allAccounts);
       console.log(account)
   }
 
@@ -60,11 +64,15 @@ function App() {
     console.log(account.meta.name);
     if(!api)return;
     const TRANSFER_AMOUNT = SINGLE_REEF.mul(val);
-    const transferExtrinsic = api.tx.balances.transfer(address, TRANSFER_AMOUNT.toString());
+    console.log(address)
+    console.log(val);
+      const transferExtrinsic = api.tx.balances.transfer(address, TRANSFER_AMOUNT.toString());
       transferExtrinsic.signAndSend(account.address, { signer: injector.signer }, ({ status }) => {
         if (status.isInBlock) {
             console.log(`Completed at block hash #${status.asInBlock.toString()}`);
             alert(`Sent ${val} Reefs to ${address}`);
+              window.location.reload();  
+            
             setAddress("");
             setVal(0);
         } else {
@@ -74,6 +82,8 @@ function App() {
       setError(error);
         console.log(':( transaction failed', error);
     });
+   
+    
   }
 
   useEffect(() => {
@@ -82,6 +92,14 @@ function App() {
   
   const handleClick =()=>{
     checkExtension();
+  }
+
+  const handleRefresh =()=>{
+    let n = allAcc.length;
+    
+    setIdx((idx+1)%n);
+    setAccount(allAcc[idx]);
+  
   }
 
   return (
@@ -95,15 +113,14 @@ function App() {
       </Navbar>
       <Container>
         <div className='p4'/>
-     
       {wallConnected?
       <div>
-
+        
       <div  className='p4'>
-      <input type="text" placeholder='enter address 📮' name='address' onChange={handleChange} className="inputDesigned" required/>
+      <input type="text" placeholder='enter address 📮' value={address} name='address' onChange={handleChange} className="inputDesigned" required/>
       </div>
       <div className='p4'>
-      <input type="number" placeholder='enter value 💰' name='amount' onChange={handleChange} className="inputDesigned" required/>
+      <input type="number" placeholder='enter value 💰' value={val} name='amount' onChange={handleChange} className="inputDesigned" required/>
       </div>
       </div>
       :""}
@@ -116,18 +133,20 @@ function App() {
           <Button variant="dark" onClick={handleClick}>Connect Wallet 🖇️</Button>
         </div>
       }
-      {error.length>0 && account? 
+      
+      {error.length>0? 
      <Alert key='danger' variant='danger'>
-     Ugh! Encountered an error!
-     {error}
+     Ugh! Encountered an error! 
+     <b>{error}</b> 
 </Alert>:
     <Alert key='success' variant='success'>
           Yay!😃 There are no errors
     </Alert>
+    
     }
  {account? 
  <div className='whitu'>
-   <p>You are logged in as : <b>{account.meta.name}</b>🙉 </p>
+   <p>You are logged in as : <b>{account.meta.name}</b>🙉 <button className="refreshBtn" onClick={handleRefresh}>🔄</button></p>
    <p>Your address : {account.address}</p>
  </div>
  :""}
